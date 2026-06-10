@@ -1,0 +1,74 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel SteeringForcesCalc
+
+
+// Buffers
+RWStructuredBuffer<float3> Positions;
+RWStructuredBuffer<float3> Velocities;
+RWStructuredBuffer<float3> ResForces;
+
+// Settings
+const int numBoids;
+const float neighborRadius;
+const float SeparationForceFactor;
+const float AlignmentForceFactor;
+const float CohesionForceFactor;
+const float SeparationRadius;
+const float AlignmentRadius;
+const float CohesionRadius;
+
+[numthreads(32,1,1)]
+void SteeringForcesCalc (uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= numBoids) return;
+
+    //Forces
+    float3 cohesionForce = 0;
+    float3 alignmentForce = 0;
+    float3 separationForce = 0;
+
+    //Average velocity
+    float3 velocityAccumulador = 0;
+    float3 averageVelocity = 0;
+    //Average position
+    float3 positionAccumulador = 0;
+    float3 averagePosition = 0;
+
+    for (int neighbor = 0; neighbor < numBoids; neighbor++) 
+    {
+        if (neighbor == id.x) continue;
+
+        float dist = distance(Positions[neighbor], Positions[id.x]);
+
+        if (dist > neighborRadius) continue;
+
+        //Separation force
+        if (dist < SeparationRadius)
+        {
+            separationForce += SeparationForceFactor * ((SeparationRadius - dist) / dist) * (Positions[id.x] - Positions[neighbor]);
+        }
+
+        //TODO Calculate average position/velocity here
+        //Aerage velocity
+        if (dist < AlignmentRadius)
+        {
+            velocityAccumulador += Velocities[neighbor];
+        }
+
+        //Aerage velocity
+        if (dist < CohesionRadius)
+        {
+            positionAccumulador += Positions[neighbor];
+        }
+
+        // averageVelocity = velocityAccumulador / Flock.BoidManager.GetNeighborsCount();
+        averageVelocity = velocityAccumulador / numBoids;
+        alignmentForce = AlignmentForceFactor * (averageVelocity - Velocities[id.x]);
+
+        // averagePosition = positionAccumulador / Flock.BoidManager.GetNeighborsCount();
+        averagePosition = positionAccumulador / numBoids;
+        cohesionForce = CohesionForceFactor * (averagePosition - Positions[id.x]);
+
+        ResForces[id.x] = alignmentForce + cohesionForce + separationForce;
+    }
+}

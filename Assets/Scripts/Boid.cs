@@ -10,6 +10,9 @@ public class Boid : MonoBehaviour
     public Vector3 Position;
     public Vector3 Velocity;
     public Vector3 Acceleration;
+
+    public Vector3 steeringForce;
+
     void Start()
     {
         //TODO review
@@ -30,7 +33,7 @@ public class Boid : MonoBehaviour
         //Apply forces
         Acceleration += Flock.GetForceFromBounds(this);
         Acceleration += GetConstraintSpeedForce();
-        Acceleration += GetSteeringForce();
+        Acceleration += GetSteeringForceGPU();
         if (Flock.GetFlow())
             Acceleration += GetStationaryFlowForce();
 
@@ -50,6 +53,10 @@ public class Boid : MonoBehaviour
 
     //Internal computation of the forces:
 
+    Vector3 GetSteeringForceGPU()
+    {
+        return steeringForce;
+    }
     Vector3 GetSteeringForce()
     {
         Vector3 cohesionForce = Vector3.zero;
