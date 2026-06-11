@@ -1,5 +1,6 @@
 // Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel SteeringForcesCalc
+#pragma kernel VectorFieldForces
 
 
 // Buffers
@@ -71,4 +72,33 @@ void SteeringForcesCalc (uint3 id : SV_DispatchThreadID)
 
         ResForces[id.x] = alignmentForce + cohesionForce + separationForce;
     }
+}
+
+
+RWStructuredBuffer<float3> InterpolatedVectorForces;
+RWStructuredBuffer<float3> SourcePoints;
+RWStructuredBuffer<float3> m_lambdas;
+
+const int m_kernel; 
+
+[numthreads(32,1,1)]
+void VectorFieldForces (uint3 id : SV_DispatchThreadID)
+{
+    float3 interpolant = 0;
+
+    for (int i = 0; i < numBoids; i++) 
+    {
+        float r = distance(Positions[id.x], SourcePoints[i]);
+        float phi;
+        double GSkernel = exp(-0.001 * pow(r, 2));
+        double Skernel = r;
+        if(m_kernel >= 1)
+        {
+            phi = GSkernel;
+        } else {
+            phi = Skernel;
+        }
+        interpolant += m_lambdas[i] * phi;
+    }
+    InterpolatedVectorForces[id.x] = interpolant * 10;
 }

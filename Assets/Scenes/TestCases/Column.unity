@@ -327,6 +327,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   shader: {fileID: 7200000, guid: 51a49448d0420425fba6b8c7542eb40a, type: 3}
+  gr: {fileID: 0}
+  gpu: {fileID: 0}
 --- !u!4 &99501722
 Transform:
   m_ObjectHideFlags: 0
@@ -2414,7 +2416,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 731e26e991243401ea8dcf2edbacf8dd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_numberOfBirds: 100
+  m_numberOfBirds: 4000
   m_birdPrefab: {fileID: 482763261861772955, guid: 930b02e8d99f24d0892d79b7514a50e6,
     type: 3}
   m_spawnRadius: 10
@@ -2927,6 +2929,51 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d55bfbdd1b8e84e0d9baa7bf99bf7dd5, type: 3}
+--- !u!1 &1662414015
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1662414017}
+  - component: {fileID: 1662414016}
+  m_Layer: 0
+  m_Name: GPUToggler
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1662414016
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1662414015}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 527e5ddb266922c48bc4b8ed8c1d4599, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GPUToggle
+  useGPU: 1
+--- !u!4 &1662414017
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1662414015}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.4972, y: -1, z: 0.63229}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &1673399641 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8568385205267251632, guid: d55bfbdd1b8e84e0d9baa7bf99bf7dd5,
@@ -3860,3 +3907,4 @@ SceneRoots:
   - {fileID: 1570101841}
   - {fileID: 798973211}
   - {fileID: 897294943}
+  - {fileID: 1662414017}

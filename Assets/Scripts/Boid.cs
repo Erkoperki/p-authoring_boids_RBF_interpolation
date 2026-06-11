@@ -12,6 +12,7 @@ public class Boid : MonoBehaviour
     public Vector3 Acceleration;
 
     public Vector3 steeringForce;
+    public Vector3 InterpolatedVectorForce;
 
     void Start()
     {
@@ -30,35 +31,46 @@ public class Boid : MonoBehaviour
         //Clear acceleration from last frame
         Acceleration = Vector3.zero;
 
+        Debug.Log("Position is " + Position);
+
         //Apply forces
+        double time1 = Time.realtimeSinceStartupAsDouble;
+        Debug.Log("Step 0: Acc is " + Acceleration);
         Acceleration += Flock.GetForceFromBounds(this);
+        double time2 = Time.realtimeSinceStartupAsDouble;
+        Debug.Log("Step 1: Acc is " + Acceleration);
         Acceleration += GetConstraintSpeedForce();
-        Acceleration += GetSteeringForceGPU();
+        double time3 = Time.realtimeSinceStartupAsDouble;
+        Debug.Log("Step 2: Acc is " + Acceleration);
+        Acceleration += GetSteeringForce();
+        double time4 = Time.realtimeSinceStartupAsDouble;
+        Debug.Log("Step 3: Acc is " + Acceleration);
         if (Flock.GetFlow())
             Acceleration += GetStationaryFlowForce();
-
+        double time5 = Time.realtimeSinceStartupAsDouble;
         //TODO -------- Interpolation with the Vector Field
+        Debug.Log("Step 4: Acc is " + Acceleration);
         if (Flock.HasVectorField())
             Acceleration += Flock.GetForceFromVectorField(this);
-
+        double time6 = Time.realtimeSinceStartupAsDouble;
+        Debug.Log("Step 5: Acc is " + Acceleration);
         //Step simulation
         Velocity += deltaTime * Acceleration;
         Position += 0.5f * deltaTime * deltaTime * Acceleration + deltaTime * Velocity;
 
         //? Visualizing projected flight
         ProjectFlightOntoVectorField();
-
+        double time7 = Time.realtimeSinceStartupAsDouble;
+        int t = Flock.BoidManager.GetNeighborsCount();
+        // Debug.Log("Times: " + (time2 - time1)*t + " " + (time3 - time2)*t + " " + (time4-time3)*t + " " + (time5-time4)*t + " " + (time6-time5)*t + " " + (time7-time6)*t);
         
     }
 
     //Internal computation of the forces:
-
-    Vector3 GetSteeringForceGPU()
-    {
-        return steeringForce;
-    }
     Vector3 GetSteeringForce()
     {
+        if (Flock.BoidManager.gpu.UseGPU()) return steeringForce;
+
         Vector3 cohesionForce = Vector3.zero;
         Vector3 alignmentForce = Vector3.zero;
         Vector3 separationForce = Vector3.zero;

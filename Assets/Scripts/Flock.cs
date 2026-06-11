@@ -185,6 +185,10 @@ public class Flock : MonoBehaviour
     {
         if (gridRenderer)
         {
+            if (BoidManager.gpu.UseGPU())
+            {
+                return boid.InterpolatedVectorForce;
+            }
 
             Vector3 projectedFlight = new Vector3(boid.Position.x, boid.Position.y, boid.Position.z);
             //Debug.Log("Interpolating at " + projectedFlight);
@@ -198,5 +202,4 @@ public class Flock : MonoBehaviour
         }
         return Vector3.zero;
     }
-
 }

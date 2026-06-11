@@ -39,7 +39,7 @@ public class GridRenderer : MonoBehaviour
     [SerializeField] private GameObject sourceVectorsGO;
     private SourceVectorContainer sourceVectorContainer;
     [Tooltip("Biharmonic kernel 0, Gaussian kernel 1")]
-    [SerializeField] private int m_kernel = 0;
+    [SerializeField] public int m_kernel = 0;
 
     void Awake()
     {
@@ -79,6 +79,8 @@ public class GridRenderer : MonoBehaviour
         ComputeLamdasVector(matrixPHIforX, m_XLamdas);
         ComputeLamdasVector(matrixPHIforY, m_YLamdas);
         ComputeLamdasVector(matrixPHIforZ, m_ZLamdas);
+
+        Debug.Log("m_XLambdas sample after setup: " + m_XLamdas[0]);
         //5) Interpolate vector at sample point
         //* Sample points
         m_grid = new UniformGrid(numberOfColumns, numberOfRows, numberOfLayers, minPoint, maxPoint);
@@ -128,6 +130,7 @@ public class GridRenderer : MonoBehaviour
 
     public Vector3 InterpolateVector(Vector3 samplePoint)
     {
+        Debug.Log("InterpolateVector input: " + samplePoint);
         float interpolantX = 0;
         float interpolantY = 0;
         float interpolantZ = 0;
@@ -136,12 +139,18 @@ public class GridRenderer : MonoBehaviour
         for (int i = 0; i < sourcePoints.Count; i++)
         {
             interpolantX += (float)m_XLamdas[i] * (float)Phi(samplePoint, sourcePoints[i]);
+            Debug.Log("Phi result: " + Phi(samplePoint, sourcePoints[i]));
+            Debug.Log("m_xLambdas: " + m_XLamdas[i]);
+            Debug.Log("interpolantX: " + interpolantX);
             interpolantY += (float)m_YLamdas[i] * (float)Phi(samplePoint, sourcePoints[i]);
+            Debug.Log("interpolantY: " + interpolantY);
             interpolantZ += (float)m_ZLamdas[i] * (float)Phi(samplePoint, sourcePoints[i]);
+            Debug.Log("interpolantZ: " + interpolantZ);
         }
         Vector3 interpolatedVector = new Vector3(interpolantX, interpolantY, interpolantZ);
         //Debug.Log("samplePoint: " + samplePoint + " interpolantXY ( " + interpolantX + ", " + interpolantY + " )");
         //Debug.Log(" InterpolateVector() ->" + interpolatedVector);
+        Debug.Log("InterpolateVector output: " + interpolatedVector);
         return interpolatedVector;
     }
     private void RenderPointUniformGrid()
@@ -295,5 +304,20 @@ public class GridRenderer : MonoBehaviour
             }
             lamdas[i] = sum / matrix[i, i];
         }
+    }
+
+    public int GetNumSourcePoints()
+    {
+        return sourcePoints.Count;
+    }
+
+    public List<Vector3> GetSourcePoints()
+    {
+        return sourcePoints;
+    }
+
+    public Vector3 GetLambdaAsVector(int i)
+    {
+        return new Vector3((float)m_XLamdas[i], (float)m_YLamdas[i], (float)m_ZLamdas[i]);
     }
 }

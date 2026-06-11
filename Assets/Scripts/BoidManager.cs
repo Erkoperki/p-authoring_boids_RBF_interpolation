@@ -12,13 +12,25 @@ public class BoidManager : MonoBehaviour
     public ComputeBuffer PositionsBuffer;
     public ComputeBuffer VelocitiesBuffer;
     public ComputeBuffer ResForcesBuffer;
+    public ComputeBuffer InterpolatedVectorForcesBuffer;
+    public ComputeBuffer SourcePointsBuffer;
+    public ComputeBuffer LambdasBuffer;
+    
+    [SerializeField] private GridRenderer gr;
+    public GPUToggle gpu;
+
+    private int frameCount = 0;
+    private int updateCounter = 0;
     void Start()
     {
         //TODO separation of concerns, create a new method to create boids
         m_boids = new List<Boid>();
 
         //Get ALL the instances of the Flock class on the scene.
-        var flocks = GameObject.FindObjectsOfType<Flock>();
+        var flocks = FindObjectsByType<Flock>();
+
+        if (!gr) gr = FindAnyObjectByType<GridRenderer>();
+        if (!gpu) gpu = FindAnyObjectByType<GPUToggle>();
 
         foreach (var flock in flocks)
         {
@@ -32,60 +44,127 @@ public class BoidManager : MonoBehaviour
             m_boids.AddRange(flock.SpawnBirds());
         }
 
-        Flock tempflock = flocks[0];
-        shader.SetInt("numBoids", m_boids.Count);
-        shader.SetFloat("neighborRadius", tempflock.NeighborRadius);
-        shader.SetFloat("SeparationForceFactor", tempflock.SeparationForceFactor);
-        shader.SetFloat("AlignmentForceFactor", tempflock.AlignmentForceFactor);
-        shader.SetFloat("CohesionForceFactor", tempflock.CohesionForceFactor);
-        shader.SetFloat("SeparationRadius", tempflock.SeparationRadius);
-        shader.SetFloat("AlignmentRadius", tempflock.AlignmentRadius);
-        shader.SetFloat("CohesionRadius", tempflock.CohesionRadius);
+        if (gpu.UseGPU())
+        {
+            // Steering Forces Setup
+            Flock tempflock = flocks[0];
+            shader.SetInt("numBoids", m_boids.Count);
+            shader.SetFloat("neighborRadius", tempflock.NeighborRadius);
+            shader.SetFloat("SeparationForceFactor", tempflock.SeparationForceFactor);
+            shader.SetFloat("AlignmentForceFactor", tempflock.AlignmentForceFactor);
+            shader.SetFloat("CohesionForceFactor", tempflock.CohesionForceFactor);
+            shader.SetFloat("SeparationRadius", tempflock.SeparationRadius);
+            shader.SetFloat("AlignmentRadius", tempflock.AlignmentRadius);
+            shader.SetFloat("CohesionRadius", tempflock.CohesionRadius);
 
-        PositionsBuffer = new ComputeBuffer(m_boids.Count, 3 * sizeof(float));
-        VelocitiesBuffer = new ComputeBuffer(m_boids.Count, 3 * sizeof(float));
-        ResForcesBuffer = new ComputeBuffer(m_boids.Count, 3 * sizeof(float));
+            PositionsBuffer = new ComputeBuffer(m_boids.Count, 3 * sizeof(float));
+            VelocitiesBuffer = new ComputeBuffer(m_boids.Count, 3 * sizeof(float));
+            ResForcesBuffer = new ComputeBuffer(m_boids.Count, 3 * sizeof(float));
+
+            // Vector Field Kernel Setup
+            shader.SetInt("m_kernel", gr.m_kernel);
+
+            InterpolatedVectorForcesBuffer = new ComputeBuffer(m_boids.Count, 3 * sizeof(float));
+            SourcePointsBuffer = new ComputeBuffer(gr.GetNumSourcePoints(), 3 * sizeof(float));
+            LambdasBuffer = new ComputeBuffer(gr.GetNumSourcePoints(), 3 * sizeof(float));
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
-
+        // Debug.Log("Frame time: " + Time.deltaTime);
     }
 
     void FixedUpdate()
     {
-        Vector3[] positions = new Vector3[m_boids.Count];
-        Vector3[] velocities = new Vector3[m_boids.Count];
-        Vector3[] forces = new Vector3[m_boids.Count];
-        for (int boid = 0; boid < m_boids.Count; boid++)
+        updateCounter++;
+        if (frameCount < Time.frameCount) 
         {
-            positions[boid] = m_boids[boid].Position;
-            velocities[boid] = m_boids[boid].Velocity;
-            forces[boid] = Vector3.zero;  
+            frameCount = Time.frameCount;
+            // Debug.Log("Frame #" + Time.frameCount);
+            // Debug.Log("Last frame had " + updateCounter + " updates.");
+            updateCounter = 0;
         }
 
-        PositionsBuffer.SetData(positions);
-        VelocitiesBuffer.SetData(velocities);
-        ResForcesBuffer.SetData(forces);
-        shader.SetBuffer(0, "Positions", PositionsBuffer);
-        shader.SetBuffer(0, "Velocities", VelocitiesBuffer);
-        shader.SetBuffer(0, "ResForces", ResForcesBuffer);
+        float startTime = Time.realtimeSinceStartup;
 
-        int nGroups = m_boids.Count / 32 + 1;
-        shader.Dispatch(0, nGroups, 1, 1);
-
-        ResForcesBuffer.GetData(forces);
-
-        for (int i = 0; i < m_boids.Count; i++)
+        if (gpu.UseGPU())
         {
-            m_boids[i].steeringForce = forces[i];
-        }
+            Vector3[] positions = new Vector3[m_boids.Count];
+            Vector3[] velocities = new Vector3[m_boids.Count];
+            Vector3[] forces = new Vector3[m_boids.Count];
+            for (int boid = 0; boid < m_boids.Count; boid++)
+            {
+                positions[boid] = m_boids[boid].Position;
+                velocities[boid] = m_boids[boid].Velocity;
+                forces[boid] = Vector3.zero;  
+            }
 
+            PositionsBuffer.SetData(positions);
+            VelocitiesBuffer.SetData(velocities);
+            ResForcesBuffer.SetData(forces);
+            shader.SetBuffer(0, "Positions", PositionsBuffer);
+            shader.SetBuffer(1, "Positions", PositionsBuffer);
+            shader.SetBuffer(0, "Velocities", VelocitiesBuffer);
+            shader.SetBuffer(0, "ResForces", ResForcesBuffer);
+
+            int nGroups = m_boids.Count / 32 + 1;
+            shader.Dispatch(0, nGroups, 1, 1);
+
+            ResForcesBuffer.GetData(forces);
+
+            for (int i = 0; i < m_boids.Count; i++)
+            {
+                m_boids[i].steeringForce = forces[i];
+            }
+
+            // Set buffers for vector field calcs
+        
+            Vector3[] InterpolatedVectorForces = new Vector3[m_boids.Count];
+            for (int i = 0; i < m_boids.Count; i++)
+            {
+                InterpolatedVectorForces[i] = Vector3.zero;
+            }
+
+            shader.SetBuffer(1, "InterpolatedVectorForces", InterpolatedVectorForcesBuffer);
+
+            Vector3[] SourcePoints = new Vector3[gr.GetNumSourcePoints()];
+            Vector3[] Lambdas = new Vector3[gr.GetNumSourcePoints()];
+            SourcePoints = gr.GetSourcePoints().ToArray();
+            for (int spoints = 0; spoints < gr.GetNumSourcePoints(); spoints++)
+            {
+                Lambdas[spoints] = gr.GetLambdaAsVector(spoints);
+            }
+
+            SourcePointsBuffer.SetData(SourcePoints);
+            LambdasBuffer.SetData(Lambdas);
+            
+            shader.SetBuffer(1, "SourcePoints", SourcePointsBuffer);
+            shader.SetBuffer(1, "m_lambdas", LambdasBuffer);
+
+            shader.Dispatch(1, nGroups, 1, 1);
+
+            InterpolatedVectorForcesBuffer.GetData(InterpolatedVectorForces);
+            for (int i = 0; i < m_boids.Count; i++)
+            {
+                m_boids[i].InterpolatedVectorForce = InterpolatedVectorForces[i];
+            }
+        }
+        
         foreach (Boid boid in m_boids)
         {
             boid.UpdateSimulation(Time.fixedDeltaTime);
         }
+
+        float endTime = Time.realtimeSinceStartup;
+        float deltaTime = endTime - startTime;
+
+        //Debug.Log("Time to update " + m_boids.Count + " boids: " + deltaTime);
+
+        float averageTime = deltaTime / m_boids.Count;
+
+        //Debug.Log("Average: " + averageTime);
     }
 
     //* IEnumerable<T>
