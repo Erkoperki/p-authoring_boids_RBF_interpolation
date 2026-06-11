@@ -72,7 +72,7 @@ public class BoidManager : MonoBehaviour
         shader.SetBuffer(0, "Velocities", VelocitiesBuffer);
         shader.SetBuffer(0, "ResForces", ResForcesBuffer);
 
-        int nGroups = m_boids.Count / 32;
+        int nGroups = m_boids.Count / 32 + 1;
         shader.Dispatch(0, nGroups, 1, 1);
 
         ResForcesBuffer.GetData(forces);
