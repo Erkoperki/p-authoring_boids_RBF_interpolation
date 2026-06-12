@@ -130,27 +130,16 @@ public class GridRenderer : MonoBehaviour
 
     public Vector3 InterpolateVector(Vector3 samplePoint)
     {
-        Debug.Log("InterpolateVector input: " + samplePoint);
         float interpolantX = 0;
         float interpolantY = 0;
         float interpolantZ = 0;
-        //Debug.Log("sourcePoints.Count" + sourcePoints.Count);
-        //Debug.Log("m_XLamdas[i]" + m_XLamdas[0]);
         for (int i = 0; i < sourcePoints.Count; i++)
         {
             interpolantX += (float)m_XLamdas[i] * (float)Phi(samplePoint, sourcePoints[i]);
-            Debug.Log("Phi result: " + Phi(samplePoint, sourcePoints[i]));
-            Debug.Log("m_xLambdas: " + m_XLamdas[i]);
-            Debug.Log("interpolantX: " + interpolantX);
             interpolantY += (float)m_YLamdas[i] * (float)Phi(samplePoint, sourcePoints[i]);
-            Debug.Log("interpolantY: " + interpolantY);
             interpolantZ += (float)m_ZLamdas[i] * (float)Phi(samplePoint, sourcePoints[i]);
-            Debug.Log("interpolantZ: " + interpolantZ);
         }
         Vector3 interpolatedVector = new Vector3(interpolantX, interpolantY, interpolantZ);
-        //Debug.Log("samplePoint: " + samplePoint + " interpolantXY ( " + interpolantX + ", " + interpolantY + " )");
-        //Debug.Log(" InterpolateVector() ->" + interpolatedVector);
-        Debug.Log("InterpolateVector output: " + interpolatedVector);
         return interpolatedVector;
     }
     private void RenderPointUniformGrid()

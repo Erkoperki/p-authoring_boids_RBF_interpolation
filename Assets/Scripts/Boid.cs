@@ -31,29 +31,22 @@ public class Boid : MonoBehaviour
         //Clear acceleration from last frame
         Acceleration = Vector3.zero;
 
-        Debug.Log("Position is " + Position);
 
         //Apply forces
         double time1 = Time.realtimeSinceStartupAsDouble;
-        Debug.Log("Step 0: Acc is " + Acceleration);
         Acceleration += Flock.GetForceFromBounds(this);
         double time2 = Time.realtimeSinceStartupAsDouble;
-        Debug.Log("Step 1: Acc is " + Acceleration);
         Acceleration += GetConstraintSpeedForce();
         double time3 = Time.realtimeSinceStartupAsDouble;
-        Debug.Log("Step 2: Acc is " + Acceleration);
         Acceleration += GetSteeringForce();
         double time4 = Time.realtimeSinceStartupAsDouble;
-        Debug.Log("Step 3: Acc is " + Acceleration);
         if (Flock.GetFlow())
             Acceleration += GetStationaryFlowForce();
         double time5 = Time.realtimeSinceStartupAsDouble;
         //TODO -------- Interpolation with the Vector Field
-        Debug.Log("Step 4: Acc is " + Acceleration);
         if (Flock.HasVectorField())
             Acceleration += Flock.GetForceFromVectorField(this);
         double time6 = Time.realtimeSinceStartupAsDouble;
-        Debug.Log("Step 5: Acc is " + Acceleration);
         //Step simulation
         Velocity += deltaTime * Acceleration;
         Position += 0.5f * deltaTime * deltaTime * Acceleration + deltaTime * Velocity;
