@@ -183,7 +183,7 @@ public class BoidManager : MonoBehaviour
             avgTimePrinted = true;
             float avgCompTime = totalCompTime / updateCounter;
             Debug.Log("Average boid computation time over 20s: " + avgCompTime + " seconds.");
-            Debug.Log("Average FPS over 15s: " + updateCounter2/15 + " FPS.");
+            Debug.Log("Average FPS over 15s: " + (float)updateCounter2/15 + " FPS.");
         }
     }
 
