@@ -60,18 +60,18 @@ void SteeringForcesCalc (uint3 id : SV_DispatchThreadID)
         if (dist < CohesionRadius)
         {
             positionAccumulador += Positions[neighbor];
-        }
-
-        // averageVelocity = velocityAccumulador / Flock.BoidManager.GetNeighborsCount();
-        averageVelocity = velocityAccumulador / numBoids;
-        alignmentForce = AlignmentForceFactor * (averageVelocity - Velocities[id.x]);
-
-        // averagePosition = positionAccumulador / Flock.BoidManager.GetNeighborsCount();
-        averagePosition = positionAccumulador / numBoids;
-        cohesionForce = CohesionForceFactor * (averagePosition - Positions[id.x]);
-
-        ResForces[id.x] = alignmentForce + cohesionForce + separationForce;
+        }   
     }
+
+    // averageVelocity = velocityAccumulador / Flock.BoidManager.GetNeighborsCount();
+    averageVelocity = velocityAccumulador / numBoids;
+    alignmentForce = AlignmentForceFactor * (averageVelocity - Velocities[id.x]);
+
+    // averagePosition = positionAccumulador / Flock.BoidManager.GetNeighborsCount();
+    averagePosition = positionAccumulador / numBoids;
+    cohesionForce = CohesionForceFactor * (averagePosition - Positions[id.x]);
+
+    ResForces[id.x] = alignmentForce + cohesionForce + separationForce;
 }
 
 

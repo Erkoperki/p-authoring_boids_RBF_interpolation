@@ -21,6 +21,11 @@ public class BoidManager : MonoBehaviour
 
     private int frameCount = 0;
     private int updateCounter = 0;
+    private int updateCounter2  = 0;
+
+    private float totalCompTime = 0;
+    private bool avgTimePrinted = false;
+
     void Start()
     {
         //TODO separation of concerns, create a new method to create boids
@@ -74,6 +79,10 @@ public class BoidManager : MonoBehaviour
     void Update()
     {
         // Debug.Log("Frame time: " + Time.deltaTime);
+        if (5 < Time.realtimeSinceStartup && Time.realtimeSinceStartup < 20)
+        {
+            updateCounter2++;
+        }
     }
 
     void FixedUpdate()
@@ -84,7 +93,7 @@ public class BoidManager : MonoBehaviour
             frameCount = Time.frameCount;
             // Debug.Log("Frame #" + Time.frameCount);
             // Debug.Log("Last frame had " + updateCounter + " updates.");
-            updateCounter = 0;
+            // updateCounter = 0;
         }
 
         float startTime = Time.realtimeSinceStartup;
@@ -159,12 +168,23 @@ public class BoidManager : MonoBehaviour
 
         float endTime = Time.realtimeSinceStartup;
         float deltaTime = endTime - startTime;
-
-        //Debug.Log("Time to update " + m_boids.Count + " boids: " + deltaTime);
-
         float averageTime = deltaTime / m_boids.Count;
 
-        //Debug.Log("Average: " + averageTime);
+        if (!avgTimePrinted)
+        {
+            // Debug.Log("Time to update " + m_boids.Count + " boids: " + deltaTime);
+            // Debug.Log("Average: " + averageTime);
+            // Debug.Log("Overhead time: " + overheadTime);
+        }
+        
+        totalCompTime += deltaTime;
+        if (endTime > 20 && !avgTimePrinted)
+        {
+            avgTimePrinted = true;
+            float avgCompTime = totalCompTime / updateCounter;
+            Debug.Log("Average boid computation time over 20s: " + avgCompTime + " seconds.");
+            Debug.Log("Average FPS over 15s: " + updateCounter2/15 + " FPS.");
+        }
     }
 
     //* IEnumerable<T>

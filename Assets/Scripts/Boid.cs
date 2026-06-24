@@ -52,7 +52,7 @@ public class Boid : MonoBehaviour
         Position += 0.5f * deltaTime * deltaTime * Acceleration + deltaTime * Velocity;
 
         //? Visualizing projected flight
-        ProjectFlightOntoVectorField();
+        // ProjectFlightOntoVectorField();
         double time7 = Time.realtimeSinceStartupAsDouble;
         int t = Flock.BoidManager.GetNeighborsCount();
         // Debug.Log("Times: " + (time2 - time1)*t + " " + (time3 - time2)*t + " " + (time4-time3)*t + " " + (time5-time4)*t + " " + (time6-time5)*t + " " + (time7-time6)*t);
